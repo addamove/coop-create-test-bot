@@ -71,7 +71,7 @@ function autoKeyboardLang(str) {
 
   for (let i = 0; i < r.length; i += 1) {
     const reg = new RegExp(r[i], 'mig');
-    str = str.replace(reg, a => (a === a.toLowerCase() ? s[i] : s[i].toUpperCase()));
+    str = str.replace(reg, (a) => (a === a.toLowerCase() ? s[i] : s[i].toUpperCase()));
   }
 
   return str;

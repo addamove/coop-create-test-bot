@@ -5,7 +5,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./src/index.js",
-    "dev": "watch -rm  *.js node ./src/"
+    "dev": "watch -rm  *.js node ./src/",
+    "dly":
+      "git checkout daily && git add -A . && git commit -m -a 'daily update' && git push origin daily -f"
   },
   "author": "",
   "license": "ISC",
@@ -13,6 +15,7 @@
   "dependencies": {
     "@dlghq/dialog-bot-sdk": "^1.1.2",
     "axios": "^0.17.1",
+    "openurl": "^1.1.1",
     "watch-js": "0.0.7"
   },
   "devDependencies": {

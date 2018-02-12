@@ -8,6 +8,7 @@ const path = require('path');
 const config = require('./config');
 const utilities = require('./util');
 const createTest = require('./createTest');
+const users = require('./users');
 
 const bot = new Bot({
   endpoints: ['wss://ws1.coopintl.com'],
@@ -60,45 +61,20 @@ async function askQuestion(peer, i) {
     .join('\n');
   bot.sendInteractiveMessage(peer, `*${config.questions[i].question}*\n${anwsersTitle}`, anwsers);
 }
-// ответы в зависимости от набранных очков
-// const score = (scr) => {
-//   switch (true) {
-//     case scr <= 9:
-//       return 'IQ123\nЭто было очень даже неплохо для первого раза, твой IQ любви уже сейчас очень высок! Если ты будешь продолжать в таком же темпе, ты сможешь стать всемирно известным/-ой „гуру любви“!';
-//     case scr <= 11 && scr > 9:
-//       return 'IQ145\nТвой IQ любви выше нормы! Ты знаешь несколько хитростей, которые обычно известны только небольшому числу людей. Продолжай в том же духе и ты станешь магистром любви!';
-//     case scr <= 13 && scr > 11:
-//       return 'IQ168\nТвои знания о любви впечатляют, видимо ты эксперт по отношениям! Ты являешься партнёром , о котором можно только мечтать!';
-//     case scr <= 15 && scr > 13:
-//       return 'IQ195 Ты мог/-ла бы давать советы для влюблённых, ведь ты явно эксперт! Твой высокий IQ любви свидетельствует о том, что ты главный приз для любого/-ой партнёра/-ши!';
-//     case scr >= 18 && scr > 15:
-//       return 'IQ210\nТвой результат действительно сногсшибательный! Ты точно разбираешься в любви – от тебя даже эксперты смогут чему-то научиться!';
-//     default:
-//       return 'Что-то пошло не так';
-//   }
-// };
-
-const users = {};
 
 bot.onMessage(async (peer, message) => {
-  createTest(bot, peer);
+  users.defineNewUser(peer);
 
-  // bot.sendTextMessage(peer, JSON.stringify(users));
-  // if (typeof users[peer.id] === 'undefined') {
-  //   users[peer.id] = {
-  //     start: true,
-  //     score: 0,
-  //     i: 0,
-  //   };
-  // }
-  // if (peer.type !== 'group' && users[peer.id].start) {
-  //   bot.sendTextMessage(
-  //     peer,
-  //     'Для того чтобы составить свой тест напишите "сделать тест". Чтобы пройти тест напишете мне "@testbot начать"',
-  //   );
-  // }
+  bot.sendTextMessage(peer, JSON.stringify(users.users));
+
+  if (peer.type !== 'group' && users[peer.id].start) {
+    bot.sendTextMessage(
+      peer,
+      'Для того чтобы составить свой тест напишите "сделать тест". Чтобы пройти тест напишете мне "@testbot начать <имя теста>"',
+    );
+  }
   if (utilities.checkSpell(message.content.text, 'сделать тест')) {
-    createTest(bot, peer);
+    createTest(bot, peer, message);
   }
 });
 
