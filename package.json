@@ -7,7 +7,7 @@
     "start": "node ./src/index.js",
     "dev": "watch -rm  *.js node ./src/",
     "dly":
-      "git checkout daily && git add -A . && git commit -m -a 'daily update' && git push origin daily -f"
+      "git checkout daily && git add -A . && git commit -m 'daily' && git push origin daily -f"
   },
   "author": "",
   "license": "ISC",

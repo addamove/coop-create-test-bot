@@ -84,12 +84,4 @@ bot.onInteractiveEvent(async (event) => {
     users[event.peer.id].score += +event.value.split('#')[2];
     askQuestion(event.peer, users[event.peer.id].i);
   }
-  if (
-    event.value.split('#')[0] === 'question' &&
-    users[event.peer.id].i >= config.questions.length
-  ) {
-    bot.sendTextMessage(event.peer, score(users[event.peer.id].score));
-    bot.sendTextMessage(event.peer, 'Чтобы пройти тест ещё раз напиши мне начать');
-    users[event.peer.id].start = true;
-  }
 });
