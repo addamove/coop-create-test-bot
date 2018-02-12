@@ -9,7 +9,6 @@
   },
   "author": "",
   "license": "ISC",
-
   "description": "",
   "dependencies": {
     "@dlghq/dialog-bot-sdk": "^1.1.2",
