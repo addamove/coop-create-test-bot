@@ -18,33 +18,45 @@ const bot = new Bot({
 
 bot.onMessage(async (peer, message) => {
   users.defineNewUser(peer);
-  tests.startTest(bot, peer, 'т');
-  // bot.sendTextMessage(peer, JSON.stringify(users.users));
+  bot.sendTextMessage(peer, JSON.stringify(users.users[peer.id]));
 
-  // if (peer.type !== 'group' && users.users[peer.id].start) {
-  //   bot.sendTextMessage(
-  //     peer,
-  //     'Для того чтобы составить свой тест напишите "сделать тест". Чтобы пройти тест напишите мне "@testbot начать <имя теста>"',
-  //   );
-  //   users.users[peer.id].start = false;
-  // }
-  // if (
-  //   utilities.checkSpell(message.content.text, 'сделать тест') ||
-  //   users.users[peer.id].createTest !== 'init'
-  // ) {
-  //   tests.createTest(bot, peer, message, users.users[peer.id]);
-  // }
+  if (message.content.text.split(' ')[0] === '@ctb') {
+    const original = message.content.text;
+    const testName = original.substr(original.indexOf(' ') + 1);
+
+    tests.startTest(bot, peer, testName);
+  }
+
+  if (peer.type !== 'group' && users.users[peer.id].start) {
+    bot.sendTextMessage(
+      peer,
+      'Для того чтобы составить свой тест напишите "сделать тест". Чтобы пройти тест напишите мне "@ctb <имя теста>"',
+    );
+    users.users[peer.id].start = false;
+  }
+  if (
+    utilities.checkSpell(message.content.text, 'сделать тест') ||
+    users.users[peer.id].createTest !== 'init'
+  ) {
+    tests.createTest(bot, peer, message);
+  }
+  if (users.users[peer.id].addResults !== 'init') {
+    tests.addResults(bot, peer, message);
+  }
 });
 
 bot.onInteractiveEvent(async (event) => {
   if (event.value.split('#')[0] === 'question') {
-    users[event.peer.id].i += 1;
-    users[event.peer.id].score += +event.value.split('#')[2];
-    tests.askQuestion(event.peer, users[event.peer.id].i);
+    users.users[event.peer.id].score += +event.value.split('#')[2];
+    tests.askQuestion(event.peer, users.users[event.peer.id].i, bot);
   }
 
   if (event.value === 'nextQ' || event.value === 'allQ') {
     tests.createTest(bot, event.peer, '');
+  }
+  if (event.value === 'addRes') {
+    tests.addResults(bot, event.peer, '');
+    users.users[event.peer.id].createTest = 'init';
   }
   if (event.value.split('_')[0] === 'endTest') {
     tests.testEnds(bot, event.peer, event.value.split('_')[1]);
