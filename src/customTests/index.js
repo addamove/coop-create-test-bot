@@ -228,18 +228,32 @@ function addResults(bot, peer, message) {
   const current = users[peer.id].currentWorkingTest;
 
   switch (users[peer.id].addResults) {
-    case 'init':
+    case 'init': {
+      let scores = 0;
+      allTests[current].questions.map((question) => {
+        const anwserScore = question.anwsers.map(anwser => anwser.score);
+        scores += Math.max(...anwserScore);
+      });
+
       bot.sendTextMessage(
         peer,
-        'Пришлите результаты в форме "минимум-максимум@РЕЗУЛЬТАТ". Например: 1-10@ты спокойный. Помните - диапазоны не должны пересекаться. ',
+        `Пришлите результаты в форме "минимум-максимум@РЕЗУЛЬТАТ". Например: 1-10@Ты спокойный. *или* 11-15@Ты грубый. Числа не должны пересекаться. Максимальное кол-во очков в тесте = ${scores}`,
       );
       allTests[current].results = {};
       users[peer.id].addResults = 'addResults';
       break;
+    }
 
     case 'addResults': {
       const range = message.content.text.split('@')[0];
-
+      if (!range.match(/\d+-\d+/) || +range.split('-')[0] > +range.split('-')[1]) {
+        bot.sendTextMessage(
+          peer,
+          'Похоже вы не правильно оформили свой ответ, попробуйте ещё раз. ',
+        );
+        bot.sendTextMessage(peer, 'Например: 1-10@Ты спокойный.');
+        return;
+      }
       allTests[current].results[range] = message.content.text.split('@')[1];
       // .users[peer.id].addResults;
       bot.sendInteractiveMessage(
