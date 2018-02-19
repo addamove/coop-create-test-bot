@@ -17,12 +17,32 @@ const allSurveys = [
   },
 ];
 
+const showResult = (peer, bot) => {
+  const name = [
+    `*Название теста*: ${users[peer.id].currentTakingSurvey.name}
+  Ответы пользователя: ${peer.id}`,
+  ];
+  const res = users[peer.id].surveyInput.map((anwser, index) => `Вопрос: ${users[peer.id].currentTakingSurvey.questions[index].title}
+  Ответ пользователя: ${anwser}`);
+  const results = name.concat(res);
+  console.log(results);
+  bot.sendTextMessage(
+    {
+      id: users[peer.id].currentTakingSurvey.admin,
+      type: 'user',
+    },
+    results.join('\n'),
+  );
+};
+
 async function askQuestion(peer, i, bot) {
   if (i === users[peer.id].currentTakingSurvey.questions.length) {
-    // showResult(peer, bot);
+    showResult(peer, bot);
     bot.sendTextMessage(peer, `Кол-во очков за тест = ${users[peer.id].si}`);
+
+    console.log(JSON.stringify(users[peer.id].currentTakingSurvey));
     // clearUserInfo(peer);
-    // return;
+    return;
   }
   const anwsers = users[peer.id].currentTakingSurvey.questions[i].anwsers.map((result, index) => ({
     actions: [
@@ -66,7 +86,7 @@ async function createSurvey(bot, peer, message) {
     case 'addNameOfSurvey':
       users[peer.id].currentWorkingSurvey =
         allSurveys.push({
-          admin: peer,
+          admin: peer.id,
           name: message.content.text,
           questions: [],
         }) - 1;
@@ -139,7 +159,7 @@ function surveyEnds(bot, peer, current) {
 
   bot.sendTextMessage(
     peer,
-    `Ваш тест создан. Вы можете пройти его если напишите мне "@ctb опрос# ${
+    `Ваш опрос создан. Вы можете пройти его если напишите мне "@ctb опрос#${
       allSurveys[current].name
     }"`,
   );
