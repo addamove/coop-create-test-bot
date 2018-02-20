@@ -47,7 +47,7 @@ async function getSurveys() {
 async function askQuestion(peer, i, bot) {
   if (i === users[peer.id].currentTakingSurvey.questions.length) {
     showResult(peer, bot);
-    bot.sendTextMessage(peer, `Кол-во очков за тест = ${users[peer.id].si}`);
+    bot.sendTextMessage(peer, 'Спасибо за прохождение опроса!.');
     clearUserInfo(peer);
 
     console.log(JSON.stringify(users[peer.id].currentTakingSurvey));
