@@ -1,6 +1,7 @@
 const { users, clearUserInfo } = require('../users');
+const r = require('rethinkdbdash')({ db: 'ctb' });
 
-const allSurveys = [
+let allSurveys = [
   {
     name: 'т',
     admin: 1784921322,
@@ -35,10 +36,19 @@ const showResult = (peer, bot) => {
   );
 };
 
+function checkName(name) {
+  return allSurveys.find(obj => obj.name === name);
+}
+
+async function getSurveys() {
+  allSurveys = await r.table('surveys').run();
+}
+
 async function askQuestion(peer, i, bot) {
   if (i === users[peer.id].currentTakingSurvey.questions.length) {
     showResult(peer, bot);
     bot.sendTextMessage(peer, `Кол-во очков за тест = ${users[peer.id].si}`);
+    clearUserInfo(peer);
 
     console.log(JSON.stringify(users[peer.id].currentTakingSurvey));
     // clearUserInfo(peer);
@@ -68,6 +78,25 @@ async function askQuestion(peer, i, bot) {
   users[peer.id].si += 1;
 }
 
+async function addSurveyToDB(survey, bot, peer) {
+  const query = await r.table('surveys').filter({
+    name: survey.name,
+  });
+  if (typeof query[0] === 'undefined') {
+    try {
+      await r
+        .table('surveys')
+        .insert(survey)
+        .run();
+    } catch (err) {
+      bot.sendTextMessage(peer, 'Что-то пошло не так. Ваш опрос не добавлен в нашу базу данных.');
+      console.log(err);
+    }
+  } else {
+    bot.sendTextMessage(peer, 'Ваш опрос уже был добавлен в базу данных.');
+  }
+}
+
 async function createSurvey(bot, peer, message) {
   const current = users[peer.id].currentWorkingSurvey;
   console.log(`${JSON.stringify(allSurveys)}HUI ${current}`);
@@ -84,17 +113,21 @@ async function createSurvey(bot, peer, message) {
       break;
 
     case 'addNameOfSurvey':
-      users[peer.id].currentWorkingSurvey =
-        allSurveys.push({
-          admin: peer.id,
-          name: message.content.text,
-          questions: [],
-        }) - 1;
-      bot.sendTextMessage(
-        peer,
-        'Пришлите пункт опроса. Например: "Где вам больше нравится отдыхать?"',
-      );
-      users[peer.id].createSurvey = 'addQuestion';
+      if (checkName(message.content.text)) {
+        bot.sendTextMessage(peer, 'Опрос с таким именем уже существует. Попробуйте еще раз.');
+      } else {
+        users[peer.id].currentWorkingSurvey =
+          allSurveys.push({
+            admin: peer.id,
+            name: message.content.text,
+            questions: [],
+          }) - 1;
+        bot.sendTextMessage(
+          peer,
+          'Пришлите пункт опроса. Например: "Где вам больше нравится отдыхать?"',
+        );
+        users[peer.id].createSurvey = 'addQuestion';
+      }
       break;
 
     case 'addQuestion':
@@ -157,9 +190,11 @@ async function createSurvey(bot, peer, message) {
 function surveyEnds(bot, peer, current) {
   users[peer.id].createSurvey = 'init';
 
+  addSurveyToDB(allSurveys[current], bot, peer);
+
   bot.sendTextMessage(
     peer,
-    `Ваш опрос создан. Вы можете пройти его если напишите мне "@ctb опрос#${
+    `Ваш опрос создан. Вы можете пройти его если напишите мне "@createtb опрос#${
       allSurveys[current].name
     }"`,
   );
@@ -170,7 +205,7 @@ function startSurvey(bot, peer, name) {
   if (typeof survey === 'undefined') {
     bot.sendTextMessage(
       peer,
-      'К сожалению опрос не найден. Убедитесь что вы правильно написали его название. Название пишется без ковычек и дополнительных символов. Пример: @ctb опрос#Что покупаем на новый год',
+      'К сожалению опрос не найден. Убедитесь что вы правильно написали его название. Название пишется без ковычек и дополнительных символов. Пример: @createtb опрос#Что покупаем на новый год',
     );
   } else {
     users[peer.id].currentTakingSurvey = survey;
@@ -183,4 +218,5 @@ module.exports = {
   surveyEnds,
   startSurvey,
   askQuestion,
+  getSurveys,
 };

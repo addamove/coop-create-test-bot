@@ -4,8 +4,6 @@ TODO
 */
 
 const { Bot } = require('@dlghq/dialog-bot-sdk');
-// const path = require('path');
-// const config = require('./config');
 const utilities = require('./util');
 const tests = require('./customTests');
 const surveys = require('./customSurvey');
@@ -13,17 +11,23 @@ const users = require('./users');
 
 const bot = new Bot({
   endpoints: ['wss://ws1.coopintl.com'],
-  username: 'testbot',
+  username: 'createtb',
   password: '666',
 });
 
+tests.getTests();
+surveys.getSurveys();
+
 bot.onMessage(async (peer, message) => {
-  users.defineNewUser(peer);
+  try {
+    await users.defineNewUser(peer);
+  } catch (err) {
+    bot.sendTextMessage(peer, 'Ошибка определения юзера!');
+  }
   bot.sendTextMessage(peer, JSON.stringify(users.users[peer.id]));
 
-  if (message.content.text.split(' ')[0] === '@ctb') {
+  if (message.content.text.split(' ')[0] === '@createtb') {
     const original = message.content.text;
-    console.log(`${message.content.text.split('#')[0]} HHHH`);
 
     if (message.content.text.split('#')[0].search('опрос') !== -1) {
       const surveyName = message.content.text.split('#')[1];
@@ -35,10 +39,30 @@ bot.onMessage(async (peer, message) => {
   }
 
   if (peer.type !== 'group' && users.users[peer.id].start) {
-    bot.sendTextMessage(
-      peer,
-      'Для того чтобы составить свой тест напишите "сделать тест". Чтобы пройти тест напишите мне "@ctb <имя теста>"',
-    );
+    bot.sendTextMessage(peer, 'Чтобы пройти тест напишите мне "@createtb <имя теста>"');
+
+    bot.sendInteractiveMessage(peer, '', [
+      {
+        actions: [
+          {
+            id: '3456',
+            widget: {
+              type: 'button',
+              label: 'Сделать тест.',
+              value: 'сделать тест',
+            },
+          },
+          {
+            id: '56',
+            widget: {
+              type: 'button',
+              label: 'Сделать опрос.',
+              value: 'сделать опрос',
+            },
+          },
+        ],
+      },
+    ]);
     users.users[peer.id].start = false;
   }
   if (
@@ -53,6 +77,7 @@ bot.onMessage(async (peer, message) => {
   ) {
     surveys.createSurvey(bot, peer, message);
   }
+
   if (users.users[peer.id].addResults !== 'init') {
     tests.addResults(bot, peer, message);
   }
@@ -60,6 +85,13 @@ bot.onMessage(async (peer, message) => {
 
 bot.onInteractiveEvent(async (event) => {
   //  опросы
+  if (
+    event.value === 'сделать опрос' &&
+    users.users[event.peer.id].createSurvey === 'init' &&
+    users.users[event.peer.id].createTest === 'init'
+  ) {
+    surveys.createSurvey(bot, event.peer, 'start');
+  }
   if (event.value.split('#')[0] === 'survey') {
     users.users[event.peer.id].surveyInput.push(event.value.split('#')[2]);
     surveys.askQuestion(event.peer, users.users[event.peer.id].si, bot);
@@ -72,6 +104,13 @@ bot.onInteractiveEvent(async (event) => {
   }
 
   // tests
+  if (
+    event.value === 'сделать тест' &&
+    users.users[event.peer.id].createSurvey === 'init' &&
+    users.users[event.peer.id].createTest === 'init'
+  ) {
+    tests.createTest(bot, event.peer, 'start');
+  }
   if (event.value.split('#')[0] === 'question') {
     users.users[event.peer.id].score += +event.value.split('#')[2];
     tests.askQuestion(event.peer, users.users[event.peer.id].i, bot);

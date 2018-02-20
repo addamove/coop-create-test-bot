@@ -1,6 +1,10 @@
+/* TODO
+- сделать загрузку тестов из дб
+*/
 const { users, clearUserInfo } = require('../users');
+const r = require('rethinkdbdash')({ db: 'ctb' });
 
-const allTests = [
+let allTests = [
   {
     name: 'т',
     questions: [
@@ -73,6 +77,32 @@ const allTests = [
 //     bot.sendInteractiveMessage(peer, config.questions[i].question, anwsers);
 //   }
 // }
+function checkName(name) {
+  return allTests.find(obj => obj.name === name);
+}
+
+async function addTestToDB(test, bot, peer) {
+  const query = await r.table('tests').filter({
+    name: test.name,
+  });
+  if (typeof query[0] === 'undefined') {
+    try {
+      await r
+        .table('tests')
+        .insert(test)
+        .run();
+    } catch (err) {
+      bot.sendTextMessage(peer, 'Что-то пошло не так. Ваш тест не добавлен в нашу базу данных.');
+      console.log(err);
+    }
+  } else {
+    bot.sendTextMessage(peer, 'Ваш тест уже был добавлен в базу данных.');
+  }
+}
+
+async function getTests() {
+  allTests = await r.table('tests').run();
+}
 
 const showResult = (peer, bot) => {
   let succeed = false;
@@ -124,7 +154,6 @@ async function askQuestion(peer, i, bot) {
 
 async function createTest(bot, peer, message) {
   const current = users[peer.id].currentWorkingTest;
-  console.log(`${JSON.stringify(allTests)}HUI ${current}`);
 
   if (message === '') {
     users[peer.id].createTest = 'addQuestion';
@@ -138,13 +167,17 @@ async function createTest(bot, peer, message) {
       break;
 
     case 'addNameOfTest':
-      users[peer.id].currentWorkingTest =
-        allTests.push({
-          name: message.content.text,
-          questions: [],
-        }) - 1;
-      bot.sendTextMessage(peer, 'Пришлите название вопроса.');
-      users[peer.id].createTest = 'addQuestion';
+      if (checkName(message.content.text)) {
+        bot.sendTextMessage(peer, 'Тест с таким именем уже существует. Попробуйте еще раз.');
+      } else {
+        users[peer.id].currentWorkingTest =
+          allTests.push({
+            name: message.content.text,
+            questions: [],
+          }) - 1;
+        bot.sendTextMessage(peer, 'Пришлите название вопроса.');
+        users[peer.id].createTest = 'addQuestion';
+      }
       break;
 
     case 'addQuestion':
@@ -237,7 +270,9 @@ function addResults(bot, peer, message) {
 
       bot.sendTextMessage(
         peer,
-        `Пришлите результаты в форме "минимум-максимум@РЕЗУЛЬТАТ". Например: 1-10@Ты спокойный. *или* 11-15@Ты грубый. Числа не должны пересекаться. Максимальное кол-во очков в тесте = ${scores}`,
+        `Пришлите результаты в форме "минимум-максимум@РЕЗУЛЬТАТ".
+         Например: 1-10@Ты спокойный. *или* 11-15@Ты грубый.
+          Числа не должны пересекаться. Максимальное кол-во очков в тесте = ${scores}`,
       );
       allTests[current].results = {};
       users[peer.id].addResults = 'addResults';
@@ -289,9 +324,11 @@ function testEnds(bot, peer, current) {
   users[peer.id].createTest = 'init';
   users[peer.id].addResults = 'init';
 
+  addTestToDB(allTests[current], bot, peer);
+
   bot.sendTextMessage(
     peer,
-    `Ваш тест создан. Вы можете пройти его если напишите мне @ctb ${allTests[current].name}`,
+    `Ваш тест создан. Вы можете пройти его если напишите мне @createtb ${allTests[current].name}`,
   );
 }
 
@@ -300,7 +337,7 @@ function startTest(bot, peer, name) {
   if (typeof test === 'undefined') {
     bot.sendTextMessage(
       peer,
-      'К сожалению тест не найден. Убедитесь что вы правильно написали его название. Название пишется без ковычек и дополнительных символов. Пример: @ctb Тест Гоулмана',
+      'К сожалению тест не найден. Убедитесь что вы правильно написали его название. Название пишется без ковычек и дополнительных символов. Пример: @createtb Тест Гоулмана',
     );
   } else {
     users[peer.id].currentTakingTest = test;
@@ -314,4 +351,5 @@ module.exports = {
   startTest,
   askQuestion,
   addResults,
+  getTests,
 };
