@@ -24,7 +24,7 @@ bot.onMessage(async (peer, message) => {
   } catch (err) {
     bot.sendTextMessage(peer, 'Ошибка определения юзера!');
   }
-  bot.sendTextMessage(peer, JSON.stringify(users.users[peer.id]));
+  // bot.sendTextMessage(peer, JSON.stringify(users.users[peer.id]));
 
   if (message.content.text.split(' ')[0] === '@createtb') {
     const original = message.content.text;
