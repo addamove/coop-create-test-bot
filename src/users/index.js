@@ -16,6 +16,8 @@ async function defineNewUser(peer) {
       if (typeof query[0] === 'undefined') {
         console.log(users);
         users[peer.id] = {
+          createdTests: [],
+          createdSurveys: [],
           id: peer.id,
           start: true,
           // Создание опроса,
@@ -40,7 +42,7 @@ async function defineNewUser(peer) {
           .insert(users[peer.id])
           .run();
       } else {
-        users[peer.id] = query[0];
+        [users[peer.id]] = query;
       }
     } catch (err) {
       console.log(err);

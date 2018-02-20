@@ -1,7 +1,7 @@
 /* TODO
 - сделать загрузку тестов из дб
 */
-const { users, clearUserInfo } = require('../users');
+const { users, clearUserInfo, updateUserInDB } = require('../users');
 const r = require('rethinkdbdash')({ db: 'ctb' });
 
 let allTests = [
@@ -81,6 +81,12 @@ function checkName(name) {
   return allTests.find(obj => obj.name === name);
 }
 
+function myTests(peer) {
+  const reply = ['Ваши тесты.\n'];
+  reply.push(...users[peer.id].createdTests.map((name, i) => `${i + 1}: @createtb ${name}`));
+  return reply.join('\n');
+}
+
 async function addTestToDB(test, bot, peer) {
   const query = await r.table('tests').filter({
     name: test.name,
@@ -125,6 +131,28 @@ async function askQuestion(peer, i, bot) {
   if (i === users[peer.id].currentTakingTest.questions.length) {
     showResult(peer, bot);
     bot.sendTextMessage(peer, `Кол-во очков за тест = ${users[peer.id].score}`);
+    bot.sendInteractiveMessage(peer, '', [
+      {
+        actions: [
+          {
+            id: '3456',
+            widget: {
+              type: 'button',
+              label: 'Сделать тест',
+              value: 'сделать тест',
+            },
+          },
+          {
+            id: '56',
+            widget: {
+              type: 'button',
+              label: 'Сделать опрос',
+              value: 'сделать опрос',
+            },
+          },
+        ],
+      },
+    ]);
     clearUserInfo(peer);
     return;
   }
@@ -219,7 +247,7 @@ async function createTest(bot, peer, message) {
               id: 'nextQ',
               widget: {
                 type: 'button',
-                label: 'Следующий вопрос.',
+                label: 'Следующий вопрос',
                 value: 'nextQ',
               },
             },
@@ -227,7 +255,7 @@ async function createTest(bot, peer, message) {
               id: 'allQ',
               widget: {
                 type: 'button',
-                label: 'Закончить.',
+                label: 'Закончить',
                 value: 'addRes',
               },
             },
@@ -239,7 +267,7 @@ async function createTest(bot, peer, message) {
               id: 'end',
               widget: {
                 type: 'button',
-                label: 'Отмена.',
+                label: 'Отмена',
                 value: 'cancel',
               },
             },
@@ -301,7 +329,7 @@ function addResults(bot, peer, message) {
                 id: 'end',
                 widget: {
                   type: 'button',
-                  label: 'Закончить тест.',
+                  label: 'Закончить тест',
                   value: `endTest_${current}`,
                 },
               },
@@ -325,6 +353,8 @@ function testEnds(bot, peer, current) {
   users[peer.id].addResults = 'init';
 
   addTestToDB(allTests[current], bot, peer);
+  users[peer.id].createdTests.push(allTests[current].name);
+  updateUserInDB(peer);
 
   bot.sendTextMessage(
     peer,
@@ -352,4 +382,5 @@ module.exports = {
   askQuestion,
   addResults,
   getTests,
+  myTests,
 };

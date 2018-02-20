@@ -1,4 +1,4 @@
-const { users, clearUserInfo } = require('../users');
+const { users, clearUserInfo, updateUserInDB } = require('../users');
 const r = require('rethinkdbdash')({ db: 'ctb' });
 
 let allSurveys = [
@@ -36,6 +36,12 @@ const showResult = (peer, bot) => {
   );
 };
 
+function mySurveys(peer) {
+  const reply = ['Ваши опросы.\n'];
+  reply.push(...users[peer.id].createdSurveys.map((name, i) => `${i + 1}: @createtb опрос#${name}`));
+  return reply.join('\n');
+}
+
 function checkName(name) {
   return allSurveys.find(obj => obj.name === name);
 }
@@ -47,8 +53,30 @@ async function getSurveys() {
 async function askQuestion(peer, i, bot) {
   if (i === users[peer.id].currentTakingSurvey.questions.length) {
     showResult(peer, bot);
-    bot.sendTextMessage(peer, 'Спасибо за прохождение опроса!.');
+    bot.sendTextMessage(peer, 'Спасибо за прохождение опроса!');
     clearUserInfo(peer);
+    bot.sendInteractiveMessage(peer, '', [
+      {
+        actions: [
+          {
+            id: '3456',
+            widget: {
+              type: 'button',
+              label: 'Сделать тест',
+              value: 'сделать тест',
+            },
+          },
+          {
+            id: '56',
+            widget: {
+              type: 'button',
+              label: 'Сделать опрос',
+              value: 'сделать опрос',
+            },
+          },
+        ],
+      },
+    ]);
 
     console.log(JSON.stringify(users[peer.id].currentTakingSurvey));
     // clearUserInfo(peer);
@@ -99,7 +127,6 @@ async function addSurveyToDB(survey, bot, peer) {
 
 async function createSurvey(bot, peer, message) {
   const current = users[peer.id].currentWorkingSurvey;
-  console.log(`${JSON.stringify(allSurveys)}HUI ${current}`);
 
   if (message === '') {
     users[peer.id].createSurvey = 'addQuestion';
@@ -150,7 +177,7 @@ async function createSurvey(bot, peer, message) {
               id: 'nextS',
               widget: {
                 type: 'button',
-                label: 'Следующий вопрос.',
+                label: 'Следующий вопрос',
                 value: 'nextS',
               },
             },
@@ -191,6 +218,8 @@ function surveyEnds(bot, peer, current) {
   users[peer.id].createSurvey = 'init';
 
   addSurveyToDB(allSurveys[current], bot, peer);
+  users[peer.id].createdSurveys.push(allSurveys[current].name);
+  updateUserInDB(peer);
 
   bot.sendTextMessage(
     peer,
@@ -219,4 +248,5 @@ module.exports = {
   startSurvey,
   askQuestion,
   getSurveys,
+  mySurveys,
 };
