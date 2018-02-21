@@ -79,6 +79,9 @@ bot.onMessage(async (peer, message) => {
     bot.sendTextMessage(peer, tests.myTests(peer));
   } else if (utilities.checkSpell(message.content.text, 'мои опросы')) {
     bot.sendTextMessage(peer, surveys.mySurveys(peer));
+  } else if (utilities.checkSpell(message.content.text.split(' ')[0], '#удалить')) {
+    const name = message.content.text.substr(message.content.text.indexOf(' ') + 1);
+    surveys.deleteSurvey(peer, name, bot);
   } else {
     bot.sendTextMessage(peer, 'Я вас не понял :C');
     bot.sendTextMessage(peer, 'Может вы хотите создать тест?');

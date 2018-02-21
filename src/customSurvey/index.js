@@ -1,4 +1,6 @@
 const { users, clearUserInfo, updateUserInDB } = require('../users');
+
+const randomstring = require('randomstring');
 const r = require('rethinkdbdash')({ db: 'ctb' });
 
 let allSurveys = [
@@ -8,11 +10,11 @@ let allSurveys = [
     questions: [
       {
         title: 'ЧТО, ПО-ТВОЕМУ, САМОЕ ВАЖНОЕ В ОТНОШЕНИЯХ?',
-        anwsers: ['asdf', 'asdf', 'asdf'],
+        anwsers: ['1', '2', '3'],
       },
       {
         title: 'ЧТО, ПО-ТВОЕМУ, САМОЕ ВАЖНОЕ В ОТНОШЕНИЯХ?',
-        anwsers: ['asdf', 'asdf', 'asdf'],
+        anwsers: ['4', '5', '6'],
       },
     ],
   },
@@ -214,6 +216,7 @@ async function createSurvey(bot, peer, message) {
       break;
   }
 }
+
 function surveyEnds(bot, peer, current) {
   users[peer.id].createSurvey = 'init';
 
@@ -227,6 +230,18 @@ function surveyEnds(bot, peer, current) {
       allSurveys[current].name
     }"`,
   );
+}
+
+function deleteSurvey(peer, name, bot) {
+  if (checkName(name).admin === peer.id) {
+    allSurveys[allSurveys.findIndex(obj => obj.name === name)].name = randomstring.generate({
+      charset: '6abcdxyz',
+      capitalization: 'uppercase',
+    });
+    bot.sendTextMessage(peer, 'Тест удален!');
+  } else {
+    bot.sendTextMessage(peer, 'Что-то пошло не так :C');
+  }
 }
 
 function startSurvey(bot, peer, name) {
@@ -249,4 +264,5 @@ module.exports = {
   askQuestion,
   getSurveys,
   mySurveys,
+  deleteSurvey,
 };
