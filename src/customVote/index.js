@@ -40,7 +40,7 @@ async function selectGroup(peer, bot) {
     });
   } catch (err) {
     console.log(err);
-    bot.sendTextMessage(peer, 'Не получилось прогрузить группы :C');
+    bot.sendTextMessage(peer, 'Не получилось загрузить группы :C');
   }
 
   const messenger = await bot.ready;
