@@ -114,7 +114,7 @@ async function createVote(bot, peer, message) {
               widget: {
                 type: 'button',
                 label: 'Закончить.',
-                value: `endS_${current}`,
+                value: `endV_${current}`,
               },
             },
           ],
