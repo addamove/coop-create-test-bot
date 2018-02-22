@@ -20,12 +20,15 @@ async function defineNewUser(peer) {
           createdSurveys: [],
           id: peer.id,
           start: true,
+          // голосование
+          createVote: 'init',
           // Создание опроса,
           createSurvey: 'init',
           surveyInput: [],
           // Создание теста
           createTest: 'init',
           currentWorkingTest: undefined,
+          currentWorkingVote: undefined,
           // для боавления результатов в тесты
           addResults: 'init',
           // храним что-нибудь что надо помнить между вызовами фун-ций
@@ -34,7 +37,9 @@ async function defineNewUser(peer) {
           // currentTakingTest -> здесь будет объект со всеми данным теста
           currentTakingTest: undefined,
           score: 0,
+          // tests iterator
           i: 0,
+          // surveyIterator
           si: 0,
         };
         await r

@@ -9,15 +9,22 @@ const allVotes = [
     questions: [
       {
         title: 'message.content;.text',
-        votesCounter: 0,
+        votesCounter: [41234, 321414, 21341234],
       },
       {
         title: 'message.content.text',
-        votesCounter: 0,
+        votesCounter: [41234, 321414, 21341234],
       },
     ],
   },
 ];
+
+async function addVote(peer, anwserTitle, voteName) {
+  const i = allVotes.findIndex(v => v.name === voteName);
+  const qi = allVotes[i].questions.findIndex(q => q.title === anwserTitle);
+
+  allVotes[i].questions[qi].votesCounter.push(peer.id);
+}
 
 async function bindGroups(bot, callback) {
   const messenger = await bot.ready;
@@ -33,9 +40,60 @@ function checkName(name) {
   return allVotes.find(obj => obj.name === name);
 }
 
+function addGroupId(groupId, current) {
+  allVotes[current].groupId = groupId;
+}
+
+function formatVote(current) {
+  let allV = 0;
+  allVotes[current].questions.map((q) => {
+    allV += q.votesCounter.length;
+  });
+
+  const votes = allVotes[current].questions.map((q, index) => ({
+    actions: [
+      {
+        id: index,
+        widget: {
+          type: 'button',
+          label: `${index + 1}.`,
+          value: `vote#${allVotes[current].name}#${q.title}`,
+        },
+      },
+    ],
+  }));
+
+  const votesTitle = allVotes[current].questions
+    .map((result, index) =>
+      `${index + 1} ${result.title}\n ${allV === 0 ? '◻' : '☑'} - ${
+        allV === 0 ? 0 : result.votesCounter / allV
+      }%\n`)
+    .join('\n');
+
+  return { votes, votesTitle };
+}
+
+// in work
+function startVote(bot, current, peer, groupId) {
+  const { votes, votesTitle } = formatVote(current);
+
+  bot.sendInteractiveMessage(
+    { id: groupId, type: 'group' },
+    `*${allVotes[current].name}*\n${votesTitle}`,
+    votes,
+  );
+}
+
+async function editVote(bot, peer, rid, groupId) {
+  const current = allVotes.findIndex(v => v.groupId === groupId);
+  const { votes, votesTitle } = formatVote(current);
+
+  await bot.editInteractiveMessage(peer, rid, `*${allVotes[current].name}*\n${votesTitle}`, votes);
+}
+
 async function selectGroup(peer, bot) {
   try {
-    await bindGroups((nextGroups) => {
+    await bindGroups(bot, (nextGroups) => {
       groups = nextGroups;
     });
   } catch (err) {
@@ -104,8 +162,9 @@ async function createVote(bot, peer, message) {
     case 'addQuestion':
       allVotes[current].questions.push({
         title: message.content.text,
-        votesCounter: 0,
+        votesCounter: [],
       });
+      bot.sendTextMessage(peer, 'Пришлите пункт голосования. Например: "Анталия"');
       bot.sendInteractiveMessage(peer, 'Если вы закончили добавлять ответы к данному вопросу.', [
         {
           actions: [
@@ -114,7 +173,7 @@ async function createVote(bot, peer, message) {
               widget: {
                 type: 'button',
                 label: 'Закончить.',
-                value: `endS_${current}`,
+                value: `endV_${current}`,
               },
             },
           ],
@@ -122,7 +181,7 @@ async function createVote(bot, peer, message) {
         {
           actions: [
             {
-              id: 'endS',
+              id: 'endV',
               widget: {
                 type: 'button',
                 label: 'Отмена.',
@@ -142,4 +201,8 @@ async function createVote(bot, peer, message) {
 
 module.exports = {
   createVote,
+  addGroupId,
+  startVote,
+  addVote,
+  editVote,
 };

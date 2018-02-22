@@ -7,6 +7,7 @@ const { Bot } = require('@dlghq/dialog-bot-sdk');
 const utilities = require('./util');
 const tests = require('./customTests');
 const surveys = require('./customSurvey');
+const vote = require('./customVote');
 const users = require('./users');
 
 const bot = new Bot({
@@ -61,6 +62,18 @@ bot.onMessage(async (peer, message) => {
           },
         ],
       },
+      {
+        actions: [
+          {
+            id: '56',
+            widget: {
+              type: 'button',
+              label: 'Сделать голосование',
+              value: 'сделать голосование',
+            },
+          },
+        ],
+      },
     ]);
     users.users[peer.id].start = false;
   } else if (
@@ -68,6 +81,11 @@ bot.onMessage(async (peer, message) => {
     users.users[peer.id].createTest !== 'init'
   ) {
     tests.createTest(bot, peer, message);
+  } else if (
+    utilities.checkSpell(message.content.text, 'сделать голосование') ||
+    users.users[peer.id].createVote !== 'init'
+  ) {
+    vote.createVote(bot, peer, message);
   } else if (
     utilities.checkSpell(message.content.text, 'сделать опрос') ||
     users.users[peer.id].createSurvey !== 'init'
@@ -162,5 +180,21 @@ bot.onInteractiveEvent(async (event) => {
   }
   if (event.value.split('_')[0] === 'endTest') {
     tests.testEnds(bot, event.peer, event.value.split('_')[1]);
+  }
+
+  // votes
+  if (event.value === 'сделать голосование') {
+    vote.createVote(bot, event.peer, 'start');
+  }
+  if (event.value.split('_')[0] === 'endV') {
+    vote.createVote(bot, event.peer, '');
+  }
+  if (event.id === 'select_group') {
+    vote.addGroupId(+event.value, users.users[event.peer.id].currentWorkingVote);
+    vote.startVote(bot, users.users[event.peer.id].currentWorkingVote, event.peer, +event.value);
+  }
+  if (event.value.split('#')[0] === 'vote') {
+    vote.addVote(event.peer, event.value.split('#')[2], event.value.split('#')[1]);
+    vote.editVote(bot, event.peer, event.rid, users.users[event.peer.id].currentWorkingVote);
   }
 });
