@@ -195,6 +195,6 @@ bot.onInteractiveEvent(async (event) => {
   }
   if (event.value.split('#')[0] === 'vote') {
     vote.addVote(event.peer, event.value.split('#')[2], event.value.split('#')[1]);
-    vote.editVote(bot, event.peer, event.rid, users.users[event.peer.id].currentWorkingVote);
+    vote.editVote(bot, event.peer, event.rid, event.peer.id);
   }
 });
