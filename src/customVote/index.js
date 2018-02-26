@@ -53,7 +53,7 @@ function formatVote(current) {
   const votes = allVotes[current].questions.map((q, index) => ({
     actions: [
       {
-        id: index,
+        id: index.toString(),
         widget: {
           type: 'button',
           label: `${index + 1}.`,
@@ -62,20 +62,21 @@ function formatVote(current) {
       },
     ],
   }));
+  console.log(votes);
 
   const votesTitle = allVotes[current].questions
     .map((result, index) =>
       `${index + 1} ${result.title}\n ${allV === 0 ? '◻' : '☑'} - ${
-        allV === 0 ? 0 : result.votesCounter / allV
+        allV === 0 ? 0 : result.votesCounter.length / allV
       }%\n`)
     .join('\n');
 
   return { votes, votesTitle };
 }
 
-// in work
 function startVote(bot, current, peer, groupId) {
   const { votes, votesTitle } = formatVote(current);
+  clearUserInfo(peer);
 
   bot.sendInteractiveMessage(
     { id: groupId, type: 'group' },
@@ -87,8 +88,19 @@ function startVote(bot, current, peer, groupId) {
 async function editVote(bot, peer, rid, groupId) {
   const current = allVotes.findIndex(v => v.groupId === groupId);
   const { votes, votesTitle } = formatVote(current);
-
-  await bot.editInteractiveMessage(peer, rid, `*${allVotes[current].name}*\n${votesTitle}`, votes);
+  console.log({
+    peer,
+    rid,
+    message: 'EDITED',
+    actions: JSON.stringify(votes, null, 2),
+  });
+  await bot.editInteractiveMessage(
+    peer,
+    rid,
+    'EDITED',
+    // `*${allVotes[current].name}*\n${votesTitle}`,
+    votes,
+  );
 }
 
 async function selectGroup(peer, bot) {

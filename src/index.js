@@ -19,7 +19,58 @@ const bot = new Bot({
 tests.getTests();
 surveys.getSurveys();
 
+function startChoise(peer) {
+  bot.sendInteractiveMessage(peer, '', [
+    {
+      actions: [
+        {
+          id: '3456',
+          widget: {
+            type: 'button',
+            label: 'Сделать тест',
+            value: 'сделать тест',
+          },
+        },
+        {
+          id: '56',
+          widget: {
+            type: 'button',
+            label: 'Сделать опрос',
+            value: 'сделать опрос',
+          },
+        },
+      ],
+    },
+    {
+      actions: [
+        {
+          id: '56',
+          widget: {
+            type: 'button',
+            label: 'Сделать голосование',
+            value: 'сделать голосование',
+          },
+        },
+      ],
+    },
+  ]);
+}
+
 bot.onMessage(async (peer, message) => {
+  bot.sendInteractiveMessage(peer, '', [
+    {
+      actions: [
+        {
+          id: '3456',
+          widget: {
+            type: 'button',
+            label: 'Сделать тест',
+            value: 'тест',
+          },
+        },
+      ],
+    },
+  ]);
   try {
     await users.defineNewUser(peer);
   } catch (err) {
@@ -40,41 +91,8 @@ bot.onMessage(async (peer, message) => {
     }
   } else if (peer.type !== 'group' && users.users[peer.id].start) {
     bot.sendTextMessage(peer, 'Чтобы пройти тест напишите мне "@createtb <имя теста>"');
+    startChoise(peer);
 
-    bot.sendInteractiveMessage(peer, '', [
-      {
-        actions: [
-          {
-            id: '3456',
-            widget: {
-              type: 'button',
-              label: 'Сделать тест',
-              value: 'сделать тест',
-            },
-          },
-          {
-            id: '56',
-            widget: {
-              type: 'button',
-              label: 'Сделать опрос',
-              value: 'сделать опрос',
-            },
-          },
-        ],
-      },
-      {
-        actions: [
-          {
-            id: '56',
-            widget: {
-              type: 'button',
-              label: 'Сделать голосование',
-              value: 'сделать голосование',
-            },
-          },
-        ],
-      },
-    ]);
     users.users[peer.id].start = false;
   } else if (
     utilities.checkSpell(message.content.text, 'сделать тест') ||
@@ -100,7 +118,7 @@ bot.onMessage(async (peer, message) => {
   } else if (utilities.checkSpell(message.content.text.split(' ')[0], '#удалить')) {
     const name = message.content.text.substr(message.content.text.indexOf(' ') + 1);
     surveys.deleteSurvey(peer, name, bot);
-  } else {
+  } else if (peer.type !== 'group') {
     bot.sendTextMessage(peer, 'Я вас не понял :C');
     bot.sendTextMessage(peer, 'Может вы хотите создать тест?');
     bot.sendTextMessage(peer, 'Тогда напишите мне "создать тест" без ковычек.');
@@ -112,34 +130,16 @@ bot.onMessage(async (peer, message) => {
 });
 
 bot.onInteractiveEvent(async (event) => {
+  if (event.value === 'тест') {
+    bot.editInteractiveMessage(event.peer, event.rid, 'EDITED', []);
+  }
   if (event.value === 'cancel') {
     users.clearUserInfo(event.peer);
     bot.sendTextMessage(event.peer, 'Отменено.');
-    bot.sendInteractiveMessage(event.peer, '', [
-      {
-        actions: [
-          {
-            id: '3456',
-            widget: {
-              type: 'button',
-              label: 'Сделать тест',
-              value: 'сделать тест',
-            },
-          },
-          {
-            id: '56',
-            widget: {
-              type: 'button',
-              label: 'Сделать опрос',
-              value: 'сделать опрос',
-            },
-          },
-        ],
-      },
-    ]);
+    startChoise(event.peer);
   }
 
-  //  опросы
+  //  surveys
   if (
     event.value === 'сделать опрос' &&
     users.users[event.peer.id].createSurvey === 'init' &&
