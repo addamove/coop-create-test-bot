@@ -43,7 +43,6 @@ async function defineNewUser(peer) {
         })
         .run();
       if (typeof query[0] === 'undefined') {
-        console.log(users);
         defineUserInfo(peer);
         await r
           .table('state')

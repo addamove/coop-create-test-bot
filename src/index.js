@@ -25,26 +25,12 @@ tests.getTests();
 surveys.getSurveys();
 
 bot.onMessage(async (peer, message) => {
-  //  bot.sendInteractiveMessage(peer, '', [
-  //   {
-  //     actions: [
-  //       {
-  //         id: '3456',
-  //         widget: {
-  //           type: 'button',
-  //           label: 'Сделать тест',
-  //           value: 'тест',
-  //         },
-  //       },
-  //     ],
-  //   },
-  // ]);
+
   try {
     await users.defineNewUser(peer);
   } catch (err) {
     bot.sendTextMessage(peer, 'Ошибка определения юзера!');
   }
-  // bot.sendTextMessage(peer, JSON.stringify(users.users[peer.id]));
 
   if (message.content.text.split(' ')[0] === '@createtb') {
     users.clearUserInfo(peer);

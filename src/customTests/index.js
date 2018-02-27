@@ -59,25 +59,7 @@ let allTests = [
   },
 ];
 
-// function askFullQuestion(peer, i) {
-//   if (i >= config.questions.length) {
-//     bot.sendTextMessage(peer, 'Тест закончен');
-//   } else {
-//     const anwsers = config.questions[i].anwsers.map(result => ({
-//       actions: [
-//         {
-//           id: i,
-//           widget: {
-//             type: 'button',
-//             label: result.title,
-//             value: `question#${i}#${result.score}`,
-//           },
-//         },
-//       ],
-//     }));
-//     bot.sendInteractiveMessage(peer, config.questions[i].question, anwsers);
-//   }
-// }
+
 function checkName(name) {
   return allTests.find(obj => obj.name === name);
 }
@@ -165,6 +147,7 @@ async function askQuestion(peer, i, bot) {
 async function createTest(bot, peer, message) {
   const current = users[peer.id].currentWorkingTest;
 
+  
   if (message === '') {
     users[peer.id].createTest = 'addQuestion';
     bot.sendTextMessage(peer, 'Пришлите название вопроса.');
@@ -300,7 +283,6 @@ function addResults(bot, peer, message) {
         return;
       }
       allTests[current].results[range] = message.content.text.split('@')[1];
-      // .users[peer.id].addResults;
       bot.sendInteractiveMessage(
         peer,
         'Если вы закончили добавлять результаты ответов к данному тесту.',

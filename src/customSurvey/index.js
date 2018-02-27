@@ -22,20 +22,18 @@ let allSurveys = [
 ];
 
 const showResult = (peer, bot) => {
-  const name = [
-    `*Название теста*: ${users[peer.id].currentTakingSurvey.name}
-  Ответы пользователя: ${peer.id}`,
-  ];
-  const res = users[peer.id].surveyInput.map((anwser, index) => `Вопрос: ${users[peer.id].currentTakingSurvey.questions[index].title}
-  Ответ пользователя: ${anwser}`);
-  const results = name.concat(res);
-  console.log(results);
+  const name = `*Название теста*: ${users[peer.id].currentTakingSurvey.name}
+  Ответы пользователя: ${peer.id}`;
+  const res = users[peer.id].surveyInput
+    .map((anwser, index) => `Вопрос: ${users[peer.id].currentTakingSurvey.questions[index].title}
+  Ответ пользователя: ${anwser}`)
+    .join('\n');
   bot.sendTextMessage(
     {
       id: users[peer.id].currentTakingSurvey.admin,
       type: 'user',
     },
-    results.join('\n'),
+    name + res,
   );
 };
 
@@ -60,8 +58,6 @@ async function askQuestion(peer, i, bot) {
     clearUserInfo(peer);
     startChoise(bot, peer);
 
-    console.log(JSON.stringify(users[peer.id].currentTakingSurvey));
-    // clearUserInfo(peer);
     return;
   }
   const anwsers = users[peer.id].currentTakingSurvey.questions[i].anwsers.map((result, index) => ({

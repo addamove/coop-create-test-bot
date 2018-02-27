@@ -68,7 +68,6 @@ function formatVote(current) {
       },
     ],
   }));
-  console.log(votes);
   const howManyVoted =
     allV === 1 ? `\nПроголосовал ${allV} человек.` : `\nПроголосовало ${allV} человек.`;
   const votesTitle =
