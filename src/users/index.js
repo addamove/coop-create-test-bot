@@ -59,14 +59,19 @@ async function defineNewUser(peer) {
 }
 
 function clearUserInfo(peer) {
-  // users[peer.id].currentTakingTest = undefined;
-  // users[peer.id].currentWorkingTest = undefined;
-  // users[peer.id].currentTakingSurvey = undefined;
-  // users[peer.id].currentWorkingSurvey = undefined;
-  // users[peer.id].score = 0;
-  // users[peer.id].i = 0;
-  // users[peer.id].si = 0;
-  defineUserInfo(peer);
+  users[peer.id].currentTakingTest = undefined;
+  users[peer.id].currentWorkingTest = undefined;
+  users[peer.id].currentTakingSurvey = undefined;
+  users[peer.id].currentWorkingSurvey = undefined;
+  users[peer.id].currentWorkingVote = undefined;
+
+  users[peer.id].createTest = 'init';
+  users[peer.id].createSurvey = 'init';
+  users[peer.id].createVote = 'init';
+
+  users[peer.id].score = 0;
+  users[peer.id].i = 0;
+  users[peer.id].si = 0;
 }
 
 async function updateUserInDB(peer) {

@@ -15,62 +15,30 @@ const bot = new Bot({
   username: 'testbot',
   password: '666',
 });
+// const bot = new Bot({
+//   endpoints: ['wss://ws1.coopintl.com'],
+//   username: 'extestbot',
+//   password: 'ghXhc5dq8Fs5gr',
+// });
 
 tests.getTests();
 surveys.getSurveys();
 
-function startChoise(peer) {
-  bot.sendInteractiveMessage(peer, '', [
-    {
-      actions: [
-        {
-          id: '3456',
-          widget: {
-            type: 'button',
-            label: 'Сделать тест',
-            value: 'сделать тест',
-          },
-        },
-        {
-          id: '56',
-          widget: {
-            type: 'button',
-            label: 'Сделать опрос',
-            value: 'сделать опрос',
-          },
-        },
-      ],
-    },
-    {
-      actions: [
-        {
-          id: '56',
-          widget: {
-            type: 'button',
-            label: 'Сделать голосование',
-            value: 'сделать голосование',
-          },
-        },
-      ],
-    },
-  ]);
-}
-
 bot.onMessage(async (peer, message) => {
-  bot.sendInteractiveMessage(peer, '', [
-    {
-      actions: [
-        {
-          id: '3456',
-          widget: {
-            type: 'button',
-            label: 'Сделать тест',
-            value: 'тест',
-          },
-        },
-      ],
-    },
-  ]);
+  //  bot.sendInteractiveMessage(peer, '', [
+  //   {
+  //     actions: [
+  //       {
+  //         id: '3456',
+  //         widget: {
+  //           type: 'button',
+  //           label: 'Сделать тест',
+  //           value: 'тест',
+  //         },
+  //       },
+  //     ],
+  //   },
+  // ]);
   try {
     await users.defineNewUser(peer);
   } catch (err) {
@@ -91,7 +59,7 @@ bot.onMessage(async (peer, message) => {
     }
   } else if (peer.type !== 'group' && users.users[peer.id].start) {
     bot.sendTextMessage(peer, 'Чтобы пройти тест напишите мне "@createtb <имя теста>"');
-    startChoise(peer);
+    utilities.startChoise(bot, peer);
 
     users.users[peer.id].start = false;
   } else if (
@@ -130,71 +98,77 @@ bot.onMessage(async (peer, message) => {
 });
 
 bot.onInteractiveEvent(async (event) => {
-  if (event.value === 'тест') {
-    bot.editInteractiveMessage(event.peer, event.rid, 'EDITED', []);
-  }
   if (event.value === 'cancel') {
-    users.clearUserInfo(event.peer);
-    bot.sendTextMessage(event.peer, 'Отменено.');
-    startChoise(event.peer);
+    vote.deleteCanseledVoteIfExist(event.ref.peer);
+    users.clearUserInfo(event.ref.peer);
+    bot.sendTextMessage(event.ref.peer, 'Отменено.');
+    utilities.startChoise(bot, event.ref.peer);
   }
 
   //  surveys
   if (
     event.value === 'сделать опрос' &&
-    users.users[event.peer.id].createSurvey === 'init' &&
-    users.users[event.peer.id].createTest === 'init'
+    users.users[event.ref.peer.id].createSurvey === 'init' &&
+    users.users[event.ref.peer.id].createTest === 'init'
   ) {
-    surveys.createSurvey(bot, event.peer, 'start');
+    surveys.createSurvey(bot, event.ref.peer, 'start');
   }
   if (event.value.split('#')[0] === 'survey') {
-    users.users[event.peer.id].surveyInput.push(event.value.split('#')[2]);
-    surveys.askQuestion(event.peer, users.users[event.peer.id].si, bot);
+    users.users[event.ref.peer.id].surveyInput.push(event.value.split('#')[2]);
+    surveys.askQuestion(event.ref.peer, users.users[event.ref.peer.id].si, bot);
   }
   if (event.value === 'nextS' || event.value === 'allS') {
-    surveys.createSurvey(bot, event.peer, '');
+    surveys.createSurvey(bot, event.ref.peer, '');
   }
   if (event.value.split('_')[0] === 'endS') {
-    surveys.surveyEnds(bot, event.peer, event.value.split('_')[1]);
+    surveys.surveyEnds(bot, event.ref.peer, event.value.split('_')[1]);
   }
 
   // tests
   if (
     event.value === 'сделать тест' &&
-    users.users[event.peer.id].createSurvey === 'init' &&
-    users.users[event.peer.id].createTest === 'init'
+    users.users[event.ref.peer.id].createSurvey === 'init' &&
+    users.users[event.ref.peer.id].createTest === 'init'
   ) {
-    tests.createTest(bot, event.peer, 'start');
+    tests.createTest(bot, event.ref.peer, 'start');
   }
   if (event.value.split('#')[0] === 'question') {
-    users.users[event.peer.id].score += +event.value.split('#')[2];
-    tests.askQuestion(event.peer, users.users[event.peer.id].i, bot);
+    users.users[event.ref.peer.id].score += +event.value.split('#')[2];
+    tests.askQuestion(event.ref.peer, users.users[event.ref.peer.id].i, bot);
   }
   if (event.value === 'nextQ') {
-    tests.createTest(bot, event.peer, '');
+    tests.createTest(bot, event.ref.peer, '');
   }
 
   if (event.value === 'addRes') {
-    tests.addResults(bot, event.peer, '');
-    users.users[event.peer.id].createTest = 'init';
+    tests.addResults(bot, event.ref.peer, '');
+    users.users[event.ref.peer.id].createTest = 'init';
   }
   if (event.value.split('_')[0] === 'endTest') {
-    tests.testEnds(bot, event.peer, event.value.split('_')[1]);
+    tests.testEnds(bot, event.ref.peer, event.value.split('_')[1]);
   }
 
   // votes
   if (event.value === 'сделать голосование') {
-    vote.createVote(bot, event.peer, 'start');
+    vote.createVote(bot, event.ref.peer, 'start');
   }
   if (event.value.split('_')[0] === 'endV') {
-    vote.createVote(bot, event.peer, '');
+    vote.createVote(bot, event.ref.peer, '');
   }
   if (event.id === 'select_group') {
-    vote.addGroupId(+event.value, users.users[event.peer.id].currentWorkingVote);
-    vote.startVote(bot, users.users[event.peer.id].currentWorkingVote, event.peer, +event.value);
+    vote.addGroupId(+event.value, users.users[event.ref.peer.id].currentWorkingVote);
+    vote.startVote(
+      bot,
+      users.users[event.ref.peer.id].currentWorkingVote,
+      event.ref.peer,
+      +event.value,
+    );
   }
   if (event.value.split('#')[0] === 'vote') {
-    vote.addVote(event.peer, event.value.split('#')[2], event.value.split('#')[1]);
-    vote.editVote(bot, event.peer, event.rid, event.peer.id);
+    vote.addVote(event.uid, event.value.split('#')[2], event.value.split('#')[1]);
+    vote.editVote(bot, event.ref.peer, event.ref.rid, event.ref.peer.id);
+  }
+  if (event.value === 'endVote') {
+    vote.showRes(bot, event.ref.peer);
   }
 });

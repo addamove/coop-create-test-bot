@@ -2,6 +2,7 @@
 - сделать загрузку тестов из дб
 */
 const { users, clearUserInfo, updateUserInDB } = require('../users');
+const { startChoise } = require('../util');
 const r = require('rethinkdbdash')({ db: 'ctb' });
 
 let allTests = [
@@ -131,28 +132,9 @@ async function askQuestion(peer, i, bot) {
   if (i === users[peer.id].currentTakingTest.questions.length) {
     showResult(peer, bot);
     bot.sendTextMessage(peer, `Кол-во очков за тест = ${users[peer.id].score}`);
-    bot.sendInteractiveMessage(peer, '', [
-      {
-        actions: [
-          {
-            id: '3456',
-            widget: {
-              type: 'button',
-              label: 'Сделать тест',
-              value: 'сделать тест',
-            },
-          },
-          {
-            id: '56',
-            widget: {
-              type: 'button',
-              label: 'Сделать опрос',
-              value: 'сделать опрос',
-            },
-          },
-        ],
-      },
-    ]);
+
+    startChoise(bot, peer);
+
     clearUserInfo(peer);
     return;
   }

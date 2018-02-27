@@ -1,4 +1,5 @@
 const { users, clearUserInfo, updateUserInDB } = require('../users');
+const { startChoise } = require('../util');
 
 const randomstring = require('randomstring');
 const r = require('rethinkdbdash')({ db: 'ctb' });
@@ -57,28 +58,7 @@ async function askQuestion(peer, i, bot) {
     showResult(peer, bot);
     bot.sendTextMessage(peer, 'Спасибо за прохождение опроса!');
     clearUserInfo(peer);
-    bot.sendInteractiveMessage(peer, '', [
-      {
-        actions: [
-          {
-            id: '3456',
-            widget: {
-              type: 'button',
-              label: 'Сделать тест',
-              value: 'сделать тест',
-            },
-          },
-          {
-            id: '56',
-            widget: {
-              type: 'button',
-              label: 'Сделать опрос',
-              value: 'сделать опрос',
-            },
-          },
-        ],
-      },
-    ]);
+    startChoise(bot, peer);
 
     console.log(JSON.stringify(users[peer.id].currentTakingSurvey));
     // clearUserInfo(peer);
@@ -234,11 +214,16 @@ function surveyEnds(bot, peer, current) {
 
 function deleteSurvey(peer, name, bot) {
   if (checkName(name).admin === peer.id) {
-    allSurveys[allSurveys.findIndex(obj => obj.name === name)].name = randomstring.generate({
-      charset: '6abcdxyz',
-      capitalization: 'uppercase',
-    });
-    bot.sendTextMessage(peer, 'Тест удален!');
+    const i = allSurveys.findIndex(obj => obj.name === name);
+    if (!i) {
+      bot.sendTextMessage(peer, 'Ошибка!');
+    } else {
+      allSurveys[i].name = randomstring.generate({
+        charset: '6abcdxyz',
+        capitalization: 'uppercase',
+      });
+      bot.sendTextMessage(peer, 'Тест удален!');
+    }
   } else {
     bot.sendTextMessage(peer, 'Что-то пошло не так :C');
   }

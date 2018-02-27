@@ -1,11 +1,11 @@
-const { users, clearUserInfo, updateUserInDB } = require('../users');
-const r = require('rethinkdbdash')({ db: 'ctb' });
+const { users, clearUserInfo } = require('../users');
+const { startChoise } = require('../util');
 
 let groups = [];
 const allVotes = [
   {
     name: 'т',
-    admin: 1784921322,
+    admin: 17849231322,
     questions: [
       {
         title: 'message.content;.text',
@@ -23,7 +23,13 @@ async function addVote(peer, anwserTitle, voteName) {
   const i = allVotes.findIndex(v => v.name === voteName);
   const qi = allVotes[i].questions.findIndex(q => q.title === anwserTitle);
 
-  allVotes[i].questions[qi].votesCounter.push(peer.id);
+  const voted = allVotes[i].questions.map(q => q.votesCounter.includes(peer)).includes(true);
+
+  if (voted) {
+    return false;
+  }
+  allVotes[i].questions[qi].votesCounter.push(peer);
+  return true;
 }
 
 async function bindGroups(bot, callback) {
@@ -56,27 +62,87 @@ function formatVote(current) {
         id: index.toString(),
         widget: {
           type: 'button',
-          label: `${index + 1}.`,
+          label: `${index + 1}`,
           value: `vote#${allVotes[current].name}#${q.title}`,
         },
       },
     ],
   }));
   console.log(votes);
+  const howManyVoted =
+    allV === 1 ? `\nПроголосовал ${allV} человек.` : `\nПроголосовало ${allV} человек.`;
+  const votesTitle =
+    allVotes[current].questions
+      .map((result, index) => {
+        const percents = (allV === 0 ? 0 : result.votesCounter.length / allV * 100).toFixed(2);
 
-  const votesTitle = allVotes[current].questions
-    .map((result, index) =>
-      `${index + 1} ${result.title}\n ${allV === 0 ? '◻' : '☑'} - ${
-        allV === 0 ? 0 : result.votesCounter.length / allV
-      }%\n`)
-    .join('\n');
+        let emojiCounter = '👍'.repeat(Math.floor(percents / 20));
+        if (!emojiCounter) {
+          emojiCounter = '👍';
+        }
+
+        return `${index + 1} - ${result.title}\n ${
+          result.votesCounter.length === 0 ? '◻' : emojiCounter
+        } - ${percents}%\n`;
+      })
+      .join('\n') + howManyVoted;
 
   return { votes, votesTitle };
 }
 
+function deleteOldVote(id) {
+  const i = allVotes.findIndex(v => v.admin === id);
+  if (!i) {
+    return false;
+  }
+
+  allVotes[i] = {};
+
+  return true;
+}
+
+function showRes(bot, peer) {
+  const current = allVotes.findIndex(v => v.admin === peer.id);
+  const { votesTitle } = formatVote(current);
+  const groupPeer = { type: 'group', id: allVotes[current].groupId };
+
+  bot.sendTextMessage(groupPeer, `Голосование завершено\n${votesTitle}`);
+  bot.sendTextMessage(peer, `Голосование завершено\n${votesTitle}`);
+
+  deleteOldVote(peer.id);
+  startChoise(bot, peer);
+  clearUserInfo(peer);
+  users[peer.id].createVote = 'init';
+}
+
+function deleteCanseledVoteIfExist(peer) {
+  const v = allVotes.findIndex(vote => vote.admin === peer.id);
+  if (v) {
+    allVotes[v] = {};
+
+    return true;
+  }
+  return false;
+}
+
 function startVote(bot, current, peer, groupId) {
   const { votes, votesTitle } = formatVote(current);
-  clearUserInfo(peer);
+  users[peer.id].createVote = 'defined';
+
+  bot.sendInteractiveMessage(peer, 'Вы можете в любой момент завершить опрос.', [
+    {
+      actions: [
+        {
+          id: '52893523',
+          widget: {
+            type: 'button',
+            label: 'Завершить',
+            value: 'endVote',
+          },
+        },
+      ],
+    },
+  ]);
 
   bot.sendInteractiveMessage(
     { id: groupId, type: 'group' },
@@ -88,19 +154,7 @@ function startVote(bot, current, peer, groupId) {
 async function editVote(bot, peer, rid, groupId) {
   const current = allVotes.findIndex(v => v.groupId === groupId);
   const { votes, votesTitle } = formatVote(current);
-  console.log({
-    peer,
-    rid,
-    message: 'EDITED',
-    actions: JSON.stringify(votes, null, 2),
-  });
-  await bot.editInteractiveMessage(
-    peer,
-    rid,
-    'EDITED',
-    // `*${allVotes[current].name}*\n${votesTitle}`,
-    votes,
-  );
+  await bot.editInteractiveMessage(peer, rid, `*${allVotes[current].name}*\n${votesTitle}`, votes);
 }
 
 async function selectGroup(peer, bot) {
@@ -148,6 +202,12 @@ async function createVote(bot, peer, message) {
     return;
   }
   switch (users[peer.id].createVote) {
+    case 'defined':
+      bot.sendTextMessage(
+        peer,
+        'Вы уже запустили голосование.\n Завершите его прежде чем продолжить работу.',
+      );
+      break;
     case 'init':
       bot.sendTextMessage(
         peer,
@@ -217,4 +277,6 @@ module.exports = {
   startVote,
   addVote,
   editVote,
+  showRes,
+  deleteCanseledVoteIfExist,
 };

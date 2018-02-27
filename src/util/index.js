@@ -77,6 +77,43 @@ function autoKeyboardLang(str) {
   return str;
 }
 
+function startChoise(bot, peer) {
+  bot.sendInteractiveMessage(peer, '', [
+    {
+      actions: [
+        {
+          id: '3456',
+          widget: {
+            type: 'button',
+            label: 'Сделать тест',
+            value: 'сделать тест',
+          },
+        },
+        {
+          id: '56',
+          widget: {
+            type: 'button',
+            label: 'Сделать опрос',
+            value: 'сделать опрос',
+          },
+        },
+      ],
+    },
+    {
+      actions: [
+        {
+          id: '56',
+          widget: {
+            type: 'button',
+            label: 'Сделать голосование',
+            value: 'сделать голосование',
+          },
+        },
+      ],
+    },
+  ]);
+}
+
 function checkSpell(check, correct) {
   if (correct === autoKeyboardLang(check.replace(/"/g, '')).toLowerCase()) {
     return true;
@@ -86,4 +123,5 @@ function checkSpell(check, correct) {
 
 module.exports = {
   checkSpell,
+  startChoise,
 };
