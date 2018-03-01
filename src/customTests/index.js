@@ -59,7 +59,6 @@ let allTests = [
   },
 ];
 
-
 function checkName(name) {
   return allTests.find(obj => obj.name === name);
 }
@@ -147,7 +146,6 @@ async function askQuestion(peer, i, bot) {
 async function createTest(bot, peer, message) {
   const current = users[peer.id].currentWorkingTest;
 
-  
   if (message === '') {
     users[peer.id].createTest = 'addQuestion';
     bot.sendTextMessage(peer, 'Пришлите название вопроса.');
@@ -165,7 +163,7 @@ async function createTest(bot, peer, message) {
       } else {
         users[peer.id].currentWorkingTest =
           allTests.push({
-            name: message.content.text,
+            name: message.content.text.replace(/["']/g, '\x27'),
             questions: [],
           }) - 1;
         bot.sendTextMessage(peer, 'Пришлите название вопроса.');
@@ -175,7 +173,7 @@ async function createTest(bot, peer, message) {
 
     case 'addQuestion':
       allTests[current].questions.push({
-        title: message.content.text,
+        title: message.content.text.replace(/["']/g, '\x27'),
         anwsers: [],
       });
       bot.sendTextMessage(peer, 'Пришлите название ответа.');
@@ -185,7 +183,7 @@ async function createTest(bot, peer, message) {
     case 'addAnwserTitle': {
       const lastElementQuestions = allTests[current].questions.length - 1;
       allTests[current].questions[lastElementQuestions].anwsers.push({
-        title: message.content.text,
+        title: message.content.text.replace(/["']/g, '\x27'),
         score: 0,
       });
       bot.sendTextMessage(peer, 'Пришлите кол-во очков за ответ.');

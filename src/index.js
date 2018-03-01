@@ -17,15 +17,14 @@ const bot = new Bot({
 });
 // const bot = new Bot({
 //   endpoints: ['wss://ws1.coopintl.com'],
-//   username: 'extestbot',
-//   password: 'ghXhc5dq8Fs5gr',
+//   username: 'testbot',
+//   password: '666',
 // });
 
 tests.getTests();
 surveys.getSurveys();
 
 bot.onMessage(async (peer, message) => {
-
   try {
     await users.defineNewUser(peer);
   } catch (err) {
@@ -75,7 +74,7 @@ bot.onMessage(async (peer, message) => {
   } else if (peer.type !== 'group') {
     bot.sendTextMessage(peer, 'Я вас не понял :C');
     bot.sendTextMessage(peer, 'Может вы хотите создать тест?');
-    bot.sendTextMessage(peer, 'Тогда напишите мне "создать тест" без ковычек.');
+    utilities.startChoise(bot, peer);
     bot.sendTextMessage(
       peer,
       'Если хотите увидеть ваши созданные тесты/опросы напишите "мои тесты" или "мои опросы".',

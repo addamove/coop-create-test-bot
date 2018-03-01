@@ -111,6 +111,7 @@ async function createSurvey(bot, peer, message) {
     bot.sendTextMessage(peer, 'Пришлите название вопроса.');
     return;
   }
+
   switch (users[peer.id].createSurvey) {
     case 'init':
       bot.sendTextMessage(peer, 'Назовите ваш опрос.');
@@ -124,7 +125,7 @@ async function createSurvey(bot, peer, message) {
         users[peer.id].currentWorkingSurvey =
           allSurveys.push({
             admin: peer.id,
-            name: message.content.text,
+            name: message.content.text.replace(/["']/g, '\x27'),
             questions: [],
           }) - 1;
         bot.sendTextMessage(
@@ -137,7 +138,7 @@ async function createSurvey(bot, peer, message) {
 
     case 'addQuestion':
       allSurveys[current].questions.push({
-        title: message.content.text,
+        title: message.content.text.replace(/["']/g, '\x27'),
         anwsers: [],
       });
       bot.sendTextMessage(peer, 'Пришлите название ответа.');
@@ -146,7 +147,7 @@ async function createSurvey(bot, peer, message) {
 
     case 'addAnwserTitle': {
       const lastElementQuestions = allSurveys[current].questions.length - 1;
-      allSurveys[current].questions[lastElementQuestions].anwsers.push(message.content.text);
+      allSurveys[current].questions[lastElementQuestions].anwsers.push(message.content.text.replace(/["']/g, '\x27'));
 
       bot.sendInteractiveMessage(peer, 'Если вы закончили добавлять ответы к данному вопросу.', [
         {
