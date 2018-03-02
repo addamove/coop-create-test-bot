@@ -10,16 +10,16 @@ const surveys = require('./customSurvey');
 const vote = require('./customVote');
 const users = require('./users');
 
-const bot = new Bot({
-  endpoints: ['wss://ws1.coopintl.com'],
-  username: 'createtb',
-  password: '666',
-});
 // const bot = new Bot({
 //   endpoints: ['wss://ws1.coopintl.com'],
-//   username: 'testbot',
+//   username: 'createtb',
 //   password: '666',
 // });
+const bot = new Bot({
+  endpoints: ['wss://ws1.coopintl.com'],
+  username: 'testbot',
+  password: '666',
+});
 
 tests.getTests();
 surveys.getSurveys();
@@ -31,15 +31,15 @@ bot.onMessage(async (peer, message) => {
     bot.sendTextMessage(peer, 'Ошибка определения юзера!');
   }
 
-  if (message.content.text.split(' ')[0] === '@createtb') {
+  if (message.content.text.split(' ')[0] === 'начать') {
     users.clearUserInfo(peer);
     const original = message.content.text;
 
     if (message.content.text.split('#')[0].search('опрос') !== -1) {
       const surveyName = message.content.text.split('#')[1];
       surveys.startSurvey(bot, peer, surveyName);
-    } else {
-      const testName = original.substr(original.indexOf(' ') + 1);
+    } else if (message.content.text.split('#')[0].search('тест') !== -1) {
+      const testName = message.content.text.split('#')[1];
       tests.startTest(bot, peer, testName);
     }
   } else if (peer.type !== 'group' && users.users[peer.id].start) {

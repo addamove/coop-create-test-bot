@@ -65,7 +65,7 @@ function checkName(name) {
 
 function myTests(peer) {
   const reply = ['Ваши тесты.\n'];
-  reply.push(...users[peer.id].createdTests.map((name, i) => `${i + 1}: @createtb ${name}`));
+  reply.push(...users[peer.id].createdTests.map((name, i) => `${i + 1}: начать тест#${name}`));
   return reply.join('\n');
 }
 
@@ -245,6 +245,7 @@ async function createTest(bot, peer, message) {
 
     default:
       bot.sendTextMessage(peer, 'Что-то пошло не так.');
+
       break;
   }
 }
@@ -320,7 +321,7 @@ function testEnds(bot, peer, current) {
 
   bot.sendTextMessage(
     peer,
-    `Ваш тест создан. Вы можете пройти его если напишите мне @createtb ${allTests[current].name}`,
+    `Ваш тест создан. Вы можете пройти его если напишите мне начать тест#${allTests[current].name}`,
   );
 }
 
