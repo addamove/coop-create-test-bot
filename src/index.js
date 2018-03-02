@@ -10,16 +10,16 @@ const surveys = require('./customSurvey');
 const vote = require('./customVote');
 const users = require('./users');
 
-// const bot = new Bot({
-//   endpoints: ['wss://ws1.coopintl.com'],
-//   username: 'createtb',
-//   password: '666',
-// });
 const bot = new Bot({
   endpoints: ['wss://ws1.coopintl.com'],
-  username: 'testbot',
+  username: 'createtb',
   password: '666',
 });
+// const bot = new Bot({
+//   endpoints: ['wss://ws1.coopintl.com'],
+//   username: 'testbot',
+//   password: '666',
+// });
 
 tests.getTests();
 surveys.getSurveys();
