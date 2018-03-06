@@ -115,7 +115,7 @@ function startChoise(bot, peer) {
 }
 
 function checkSpell(check, correct) {
-  if (correct === autoKeyboardLang(check.replace(/"/g, '')).toLowerCase()) {
+  if (correct === autoKeyboardLang(check.replace(/'"/g, '')).toLowerCase()) {
     return true;
   }
   return false;

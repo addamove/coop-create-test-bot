@@ -10,16 +10,16 @@ const surveys = require('./customSurvey');
 const vote = require('./customVote');
 const users = require('./users');
 
-const bot = new Bot({
-  endpoints: ['wss://ws1.coopintl.com'],
-  username: 'createtb',
-  password: '666',
-});
 // const bot = new Bot({
 //   endpoints: ['wss://ws1.coopintl.com'],
-//   username: 'testbot',
+//   username: 'createtb',
 //   password: '666',
 // });
+const bot = new Bot({
+  endpoints: ['wss://ws1.coopintl.com'],
+  username: 'testbot',
+  password: '666',
+});
 
 tests.getTests();
 surveys.getSurveys();
@@ -30,10 +30,10 @@ bot.onMessage(async (peer, message) => {
   } catch (err) {
     bot.sendTextMessage(peer, 'Ошибка определения юзера!');
   }
-
-  if (message.content.text.split(' ')[0] === 'начать') {
+  // message.content.text.split(' ')[0] === 'начать'
+  if (utilities.checkSpell(message.content.text.split(' ')[0], 'начать')) {
     users.clearUserInfo(peer);
-    const original = message.content.text;
+    // const original = message.content.text;
 
     if (message.content.text.split('#')[0].search('опрос') !== -1) {
       const surveyName = message.content.text.split('#')[1];
@@ -41,6 +41,8 @@ bot.onMessage(async (peer, message) => {
     } else if (message.content.text.split('#')[0].search('тест') !== -1) {
       const testName = message.content.text.split('#')[1];
       tests.startTest(bot, peer, testName);
+    } else {
+      bot.sendTextMessage(peer, 'Что-то пошло не так.');
     }
   } else if (peer.type !== 'group' && users.users[peer.id].start) {
     bot.sendTextMessage(peer, 'Чтобы пройти тест напишите мне "@createtb <имя теста>"');

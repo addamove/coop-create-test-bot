@@ -39,7 +39,7 @@ const showResult = (peer, bot) => {
 
 function mySurveys(peer) {
   const reply = ['Ваши опросы.\n'];
-  reply.push(...users[peer.id].createdSurveys.map((name, i) => `${i + 1}: начать опрос#${name}`));
+  reply.push(...users[peer.id].createdSurveys.map((name, i) => `${i + 1}: "начать опрос#${name}"`));
   return reply.join('\n');
 }
 
@@ -205,7 +205,7 @@ function surveyEnds(bot, peer, current) {
     peer,
     `Ваш опрос создан. Вы можете пройти его если напишите мне "начать опрос#${
     allSurveys[current].name
-    }"`,
+    }" без ковычек.`,
   );
 }
 
@@ -231,7 +231,7 @@ function startSurvey(bot, peer, name) {
   if (typeof survey === 'undefined') {
     bot.sendTextMessage(
       peer,
-      'К сожалению опрос не найден. Убедитесь что вы правильно написали его название. Название пишется без ковычек и дополнительных символов. Пример: начать опрос#Что покупаем на новый год',
+      'К сожалению опрос не найден. Убедитесь что вы правильно написали его название. Название пишется без ковычек и дополнительных символов. Пример: "начать опрос#Что покупаем на новый год"',
     );
   } else {
     users[peer.id].currentTakingSurvey = survey;
